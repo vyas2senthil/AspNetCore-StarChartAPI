@@ -65,6 +65,62 @@ namespace StarChart.Controllers
             return Ok(celestialObjects);
         }
 
+        [HttpPost]
+        public IActionResult Create([FromBody]CelestialObject celestialObject)
+        {
+            _context.CelestialObjects.Add(celestialObject); // Add new celestialObject to CelestialObject's context.
+            _context.SaveChanges(); // Save.
+            return CreatedAtRoute("GetById", new { id = celestialObject.Id }, celestialObject); // 201 Response with route.
+        }
+
+        [HttpPut("{id}")]
+        public IActionResult Update(int id, CelestialObject celestialObject)
+        {
+            //var existingCelestialObject = _context.CelestialObjects.Where(e => e.Id == id).FirstOrDefault();
+            var existingCelestialObject = _context.CelestialObjects.Find(id); // Get Existing Celestial object using its primary key Id.
+
+            if (existingCelestialObject == null)
+            {
+                return NotFound();
+            }
+            // Set the properties of existing object with parameter objects' properties.
+            existingCelestialObject.Name = celestialObject.Name;
+            existingCelestialObject.OrbitalPeriod = celestialObject.OrbitalPeriod;
+            existingCelestialObject.OrbitedObjectId = celestialObject.OrbitedObjectId;
+            _context.CelestialObjects.Update(existingCelestialObject); // Updating the celestial object with the object provided in parameter.
+            _context.SaveChanges();
+
+            return NoContent();
+        }
+
+        [HttpPatch("{id}/{name}")]
+        public IActionResult RenameObject(int id, string name)
+        {
+            var celestialObject = _context.CelestialObjects.Find(id); //Get existing celestial object.
+            if(celestialObject == null)
+            {
+                return NotFound();
+            }
+
+            celestialObject.Name = name; // Update existing cel object with name from parameter.
+            _context.CelestialObjects.Update(celestialObject); // Update Celstial Objects db context.
+            _context.SaveChanges(); 
+            return NoContent(); // Return Nothing.
+        }
+
+        [HttpDelete("{id}")]
+        public IActionResult Delete(int id)
+        {
+            List<CelestialObject> celestialObjects = _context.CelestialObjects.Where(e => e.Id == id || e.OrbitedObjectId == id).ToList(); // get all celstial objects with id or orbital obj id from paramter.
+            if (!celestialObjects.Any())
+            {
+                return NotFound();
+            }
+            _context.CelestialObjects.RemoveRange(celestialObjects); // Remove all celestial objects which match above.
+            _context.SaveChanges();
+            return NoContent();
+        }
+
 
     }
 }
